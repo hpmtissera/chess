@@ -20,6 +20,10 @@ function drawBoard() {
     const c = document.getElementById("chessBoard");
     const ctx = c.getContext("2d");
 
+    let fromPiece = null;
+    let fromLetter = null;
+    let fromNumber = null;
+
     c.addEventListener('click', function(event) { 
         const x = event.pageX - c.getBoundingClientRect().left;
         const y = event.pageY - c.getBoundingClientRect().top;
@@ -81,7 +85,19 @@ function drawBoard() {
                 break;
         }
 
-        console.log('click', positions.get(letter + number));
+        if(fromPiece === null) {
+            fromPiece = positions.get(letter + number);
+            fromLetter = letter;
+            fromNumber = number;
+            console.log('from', fromPiece);
+        } else {
+            console.log('to', letter + number, fromPiece);
+            drawBox(ctx, fromLetter, fromNumber, null);
+            drawBox(ctx, letter, number, fromPiece);
+            fromPiece = null;
+            fromLetter = null;
+            fromNumber = null;
+        }
 
     }, false);
 
@@ -116,7 +132,7 @@ function drawBoard() {
         }
 
         for (let j = 0; j < 8; j++) {
-            drawBox(ctx, x, j + 1, null, null);
+            drawBox(ctx, x, j + 1, null);
         }
     }
 
@@ -191,6 +207,8 @@ function drawBox(ctx, letter, number, piece) {
     const xIndex = (720 - x)/90 - 1;
 
     y = number - 1;
+
+    ctx.clearRect(x , 630 - y * 90, 90, 90);
 
     if(xIndex % 2 === 1) {
         if (yIndex % 2 === 0) {
