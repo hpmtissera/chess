@@ -16,13 +16,37 @@ unicodes.set('WP',  "\u{2659}");
 
 const positions = new Map();
 
+class PiecePosition {
+    constructor(piece, position) {
+        this.piece = piece;
+        this.position = position;
+    }
+}
+
+class Position {
+    constructor(letter, number) {
+        this.letter = letter;
+        this.number = number;
+    }
+}
+
+class Piece {
+    constructor(label) {
+        this.label = label;
+    }
+}
+class Pawn extends Piece {
+    isValidMove(from, to) {
+        console.log('from', from, 'to', to);
+        return true;
+    }
+}
+
 function drawBoard() {
     const c = document.getElementById("chessBoard");
     const ctx = c.getContext("2d");
 
-    let fromPiece = null;
-    let fromLetter = null;
-    let fromNumber = null;
+    let from = null;
 
     c.addEventListener('click', function(event) { 
         const x = event.pageX - c.getBoundingClientRect().left;
@@ -85,22 +109,85 @@ function drawBoard() {
                 break;
         }
 
-        if(fromPiece === null) {
-            fromPiece = positions.get(letter + number);
-            fromLetter = letter;
-            fromNumber = number;
-            console.log('from', fromPiece);
+        if(from === null) {
+            let position = new Position(letter, number);
+            from = new PiecePosition(positions.get(letter + number), position);
+            console.log('from', from);
         } else {
-            console.log('to', letter + number, fromPiece);
-            drawBox(ctx, fromLetter, fromNumber, null);
-            drawBox(ctx, letter, number, fromPiece);
-            fromPiece = null;
-            fromLetter = null;
-            fromNumber = null;
+            console.log('to', letter + number, from.piece);
+            console.log(from.position);
+            // if(from.piece.isValidMove(from.position, new Position(letter, number))) {
+                drawBox(ctx, from.position.letter, from.position.number, null);
+                drawBox(ctx, letter, number, from.piece);
+                from = null;
+            // }
         }
 
     }, false);
 
+    resetBoard(ctx);
+}
+
+function drawBox(ctx, letter, number, piece) {
+    positions.set(letter + number, piece);
+    let x;
+    switch(letter) {
+        case 'a':
+            x = 0;
+            break;
+        case 'b':
+            x = 90;
+            break;
+        case 'c':
+            x = 180;
+            break;
+        case 'd':
+            x = 270;
+            break;
+        case 'e':
+            x = 360;
+            break;
+        case 'f':
+            x = 450;
+            break;
+        case 'g':
+            x = 540;
+            break;
+        case 'h':
+            x = 630;
+            break;
+    }
+
+    const yIndex = number - 1;
+    const xIndex = (720 - x)/90 - 1;
+
+    y = number - 1;
+
+    ctx.clearRect(x , 630 - y * 90, 90, 90);
+
+    if(xIndex % 2 === 1) {
+        if (yIndex % 2 === 0) {
+            ctx.fillStyle = "green";
+            ctx.fillRect(x , 630 - y * 90, 90, 90);
+            ctx.stroke(); 
+        } 
+    } else {
+        if (y % 2 === 1) {
+            ctx.fillStyle = "green";
+            ctx.fillRect(x, 630 - y * 90, 90, 90);
+            ctx.stroke();
+        } 
+    }
+
+    if(piece !== null) {
+        ctx.font = "60px Serif";
+        ctx.fillStyle = "black";
+        ctx.fillText(unicodes.get(piece), x + 15, 720 - (y * 90) - 20);
+    }
+
+}
+
+function resetBoard(ctx) {
     for(let i = 0; i < 8; i++) {
         let x;
         switch(i) {
@@ -169,65 +256,4 @@ function drawBoard() {
     drawBox(ctx, 'f', 7, 'BP');
     drawBox(ctx, 'g', 7, 'BP');
     drawBox(ctx, 'h', 7, 'BP');
-
-    console.log("filled");
-}
-
-function drawBox(ctx, letter, number, piece) {
-    positions.set(letter + number, piece);
-    let x;
-    switch(letter) {
-        case 'a':
-            x = 0;
-            break;
-        case 'b':
-            x = 90;
-            break;
-        case 'c':
-            x = 180;
-            break;
-        case 'd':
-            x = 270;
-            break;
-        case 'e':
-            x = 360;
-            break;
-        case 'f':
-            x = 450;
-            break;
-        case 'g':
-            x = 540;
-            break;
-        case 'h':
-            x = 630;
-            break;
-    }
-
-    const yIndex = number - 1;
-    const xIndex = (720 - x)/90 - 1;
-
-    y = number - 1;
-
-    ctx.clearRect(x , 630 - y * 90, 90, 90);
-
-    if(xIndex % 2 === 1) {
-        if (yIndex % 2 === 0) {
-            ctx.fillStyle = "green";
-            ctx.fillRect(x , 630 - y * 90, 90, 90);
-            ctx.stroke(); 
-        } 
-    } else {
-        if (y % 2 === 1) {
-            ctx.fillStyle = "green";
-            ctx.fillRect(x, 630 - y * 90, 90, 90);
-            ctx.stroke();
-        } 
-    }
-
-    if(piece !== null) {
-        ctx.font = "60px Serif";
-        ctx.fillStyle = "black";
-        ctx.fillText(unicodes.get(piece), x + 15, 720 - (y * 90) - 20);
-    }
-
 }
