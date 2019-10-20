@@ -25,20 +25,61 @@ class PiecePosition {
 
 class Position {
     constructor(letter, number) {
+        this.key = letter + number;
         this.letter = letter;
         this.number = number;
     }
 }
 
 class Piece {
-    constructor(label) {
-        this.label = label;
+    constructor(isWhite, label) {
+        this.isWhite = isWhite;
+        if(isWhite) {
+            this.key = 'W' + label;
+        } else {
+            this.key = 'B' + label;
+        }
     }
 }
+
 class Pawn extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'P');
+    }
+
     isValidMove(from, to) {
         console.log('from', from, 'to', to);
         return true;
+    }
+}
+
+class Bishop extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'B');
+    }
+}
+
+class Knight extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'N');
+    }
+}
+
+class Rook extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'R');
+    }
+}
+
+class Queen extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'Q');
+    }
+}
+
+class King extends Piece {
+    constructor(isWhite) {
+        super(isWhite, 'K');
     }
 }
 
@@ -117,8 +158,8 @@ function drawBoard() {
             console.log('to', letter + number, from.piece);
             console.log(from.position);
             // if(from.piece.isValidMove(from.position, new Position(letter, number))) {
-                drawBox(ctx, from.position.letter, from.position.number, null);
-                drawBox(ctx, letter, number, from.piece);
+                drawBox(ctx, from.position, null);
+                drawBox(ctx, new Position(letter, number), from.piece);
                 from = null;
             // }
         }
@@ -128,10 +169,9 @@ function drawBoard() {
     resetBoard(ctx);
 }
 
-function drawBox(ctx, letter, number, piece) {
-    positions.set(letter + number, piece);
+function drawBox(ctx, position, piece) {
     let x;
-    switch(letter) {
+    switch(position.letter) {
         case 'a':
             x = 0;
             break;
@@ -158,10 +198,10 @@ function drawBox(ctx, letter, number, piece) {
             break;
     }
 
-    const yIndex = number - 1;
+    const yIndex = position.number - 1;
     const xIndex = (720 - x)/90 - 1;
 
-    y = number - 1;
+    y = position.number - 1;
 
     ctx.clearRect(x , 630 - y * 90, 90, 90);
 
@@ -180,9 +220,10 @@ function drawBox(ctx, letter, number, piece) {
     }
 
     if(piece !== null) {
+        positions.set(position.key, piece);
         ctx.font = "60px Serif";
         ctx.fillStyle = "black";
-        ctx.fillText(unicodes.get(piece), x + 15, 720 - (y * 90) - 20);
+        ctx.fillText(unicodes.get(piece.key), x + 15, 720 - (y * 90) - 20);
     }
 
 }
@@ -219,41 +260,41 @@ function resetBoard(ctx) {
         }
 
         for (let j = 0; j < 8; j++) {
-            drawBox(ctx, x, j + 1, null);
+            drawBox(ctx, new Position(x, j + 1), null);
         }
     }
 
-    drawBox(ctx, 'a', 1, 'WR');
-    drawBox(ctx, 'b', 1, 'WN');
-    drawBox(ctx, 'c', 1, 'WB');
-    drawBox(ctx, 'd', 1, 'WQ');
-    drawBox(ctx, 'e', 1, 'WK');
-    drawBox(ctx, 'f', 1, 'WB');
-    drawBox(ctx, 'g', 1, 'WN');
-    drawBox(ctx, 'h', 1, 'WR');
-    drawBox(ctx, 'a', 2, 'WP');
-    drawBox(ctx, 'b', 2, 'WP');
-    drawBox(ctx, 'c', 2, 'WP');
-    drawBox(ctx, 'd', 2, 'WP');
-    drawBox(ctx, 'e', 2, 'WP');
-    drawBox(ctx, 'f', 2, 'WP');
-    drawBox(ctx, 'g', 2, 'WP');
-    drawBox(ctx, 'h', 2, 'WP');
+    drawBox(ctx, new Position('a', 1), new Rook(true));
+    drawBox(ctx, new Position('b', 1), new Knight(true));
+    drawBox(ctx, new Position('c', 1), new Bishop(true));
+    drawBox(ctx, new Position('d', 1), new Queen(true));
+    drawBox(ctx, new Position('e', 1), new King(true));
+    drawBox(ctx, new Position('f', 1), new Bishop(true));
+    drawBox(ctx, new Position('g', 1), new Knight(true));
+    drawBox(ctx, new Position('h', 1), new Rook(true));
+    drawBox(ctx, new Position('a', 2), new Pawn(true));
+    drawBox(ctx, new Position('b', 2), new Pawn(true));
+    drawBox(ctx, new Position('c', 2), new Pawn(true));
+    drawBox(ctx, new Position('d', 2), new Pawn(true));
+    drawBox(ctx, new Position('e', 2), new Pawn(true));
+    drawBox(ctx, new Position('f', 2), new Pawn(true));
+    drawBox(ctx, new Position('g', 2), new Pawn(true));
+    drawBox(ctx, new Position('h', 2), new Pawn(true));
 
-    drawBox(ctx, 'a', 8, 'BR');
-    drawBox(ctx, 'b', 8, 'BN');
-    drawBox(ctx, 'c', 8, 'BB');
-    drawBox(ctx, 'd', 8, 'BQ');
-    drawBox(ctx, 'e', 8, 'BK');
-    drawBox(ctx, 'f', 8, 'BB');
-    drawBox(ctx, 'g', 8, 'BN');
-    drawBox(ctx, 'h', 8, 'BR');
-    drawBox(ctx, 'a', 7, 'BP');
-    drawBox(ctx, 'b', 7, 'BP');
-    drawBox(ctx, 'c', 7, 'BP');
-    drawBox(ctx, 'd', 7, 'BP');
-    drawBox(ctx, 'e', 7, 'BP');
-    drawBox(ctx, 'f', 7, 'BP');
-    drawBox(ctx, 'g', 7, 'BP');
-    drawBox(ctx, 'h', 7, 'BP');
+    drawBox(ctx, new Position('a', 8), new Rook(false));
+    drawBox(ctx, new Position('b', 8), new Knight(false));
+    drawBox(ctx, new Position('c', 8), new Bishop(false));
+    drawBox(ctx, new Position('d', 8), new Queen(false));
+    drawBox(ctx, new Position('e', 8), new King(false));
+    drawBox(ctx, new Position('f', 8), new Bishop(false));
+    drawBox(ctx, new Position('g', 8), new Knight(false));
+    drawBox(ctx, new Position('h', 8), new Rook(false));
+    drawBox(ctx, new Position('a', 7), new Pawn(false));
+    drawBox(ctx, new Position('b', 7), new Pawn(false));
+    drawBox(ctx, new Position('c', 7), new Pawn(false));
+    drawBox(ctx, new Position('d', 7), new Pawn(false));
+    drawBox(ctx, new Position('e', 7), new Pawn(false));
+    drawBox(ctx, new Position('f', 7), new Pawn(false));
+    drawBox(ctx, new Position('g', 7), new Pawn(false));
+    drawBox(ctx, new Position('h', 7), new Pawn(false));
 }
