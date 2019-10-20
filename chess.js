@@ -48,9 +48,62 @@ class Pawn extends Piece {
     }
 
     isValidMove(from, to) {
-        console.log('from', from, 'to', to);
-        return true;
+        console.log(this, 'from', from, 'to', to);
+
+        if(this.isWhite) {
+
+            if(from.letter === to.letter) {
+                // if pawn in initial position can move two squares
+                if(from.number === 2 && to.number === 4) {
+                    return true;
+                }
+
+                // if any other position can move one square forward
+                if(to.number - from.number === 1) {
+                    return true;
+                }
+            }
+
+            // when captureing can move one squre diagonal
+            if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && to.number - from.number === 1) {
+                console.log(positions, to.label, positions.get(to.label))
+                if(positions.get(to.key) && !positions.get(to.key).isWhite) {
+                    return true;
+                }
+            }
+
+        } else {
+            if(from.letter === to.letter) {
+                // if pawn in initial position can move two squares
+                if(from.number === 7 && to.number === 5) {
+                    return true;
+                }
+
+                // if any other position can move one square forward
+                if(from.number - to.number === 1) {
+                    return true;
+                }
+            }
+
+            // when captureing can move one squre diagonal
+            if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && from.number - to.number === 1) {
+                if(positions.get(to.key) && positions.get(to.key).isWhite) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
+
+}
+
+function inCheckAfterMove(from, to) {
+    return false;
+}
+ 
+function isPathClear(from, to) {
+    
 }
 
 class Bishop extends Piece {
@@ -149,19 +202,19 @@ function drawBoard() {
                 number = 8;
                 break;
         }
-
-        if(from === null) {
+        console.log(from);
+        if(from === null && positions.get(letter + number)) {
             let position = new Position(letter, number);
             from = new PiecePosition(positions.get(letter + number), position);
-            console.log('from', from);
         } else {
-            console.log('to', letter + number, from.piece);
-            console.log(from.position);
-            // if(from.piece.isValidMove(from.position, new Position(letter, number))) {
+            if(from && from.piece.isValidMove(from.position, new Position(letter, number))) {
                 drawBox(ctx, from.position, null);
                 drawBox(ctx, new Position(letter, number), from.piece);
+            }
+            // when click on same piece two times, it remains as from value
+            if(from && from.position.key !== new Position(letter, number).key) {
                 from = null;
-            // }
+            }
         }
 
     }, false);
@@ -224,6 +277,8 @@ function drawBox(ctx, position, piece) {
         ctx.font = "60px Serif";
         ctx.fillStyle = "black";
         ctx.fillText(unicodes.get(piece.key), x + 15, 720 - (y * 90) - 20);
+    } else {
+        positions.delete(position.key);
     }
 
 }
