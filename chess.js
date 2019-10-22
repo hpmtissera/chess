@@ -158,6 +158,36 @@ function isPathClear(from, to, isPawn) {
         }
         
     }
+
+    // check path clean in the diagonal
+    if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) ===  Math.abs(from.number - to.number)) {
+        const numberOfSquaresToCheck = Math.abs(to.number - from.number) - 1;
+        console.log(numberOfSquaresToCheck);
+        for (let i = 1; i <= numberOfSquaresToCheck; i++) {
+            if(from.number < to.number) {
+                if(from.letter.charCodeAt(0) < to.letter.charCodeAt(0)) {
+                    if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) + i)}${from.number + i}`) != null) {
+                        return false;
+                    }
+                } else {
+                    if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) - i)}${from.number + i}`) != null) {
+                        return false;
+                    }
+                }                
+            } else {
+                if(from.letter.charCodeAt(0) < to.letter.charCodeAt(0)) {
+                    if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) + i)}${from.number - i}`) != null) {
+                        return false;
+                    }
+                } else {
+                    if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) - i)}${from.number - i}`) != null) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -165,12 +195,61 @@ class Bishop extends Piece {
     constructor(isWhite) {
         super(isWhite, 'B');
     }
+
+    isValidMove(from, to) {
+        //check if destination is in the diagonal
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) ===  Math.abs(from.number - to.number)) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+
+
+        
+        return false;
+    }
 }
 
 class Knight extends Piece {
     constructor(isWhite) {
         super(isWhite, 'N');
     }
+
+    isValidMove(from, to) {
+        //when to location is one left or one right file
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1) {
+            if(Math.abs(from.number - to.number) === 2) {
+                if(isDestinationValid(this, to)) {
+                    return true;
+                }
+            }
+        }
+
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 2) {
+            if(Math.abs(from.number - to.number) === 1) {
+                if(isDestinationValid(this, to)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+// Check if it is legal to move the piece to the destination
+// Not to used with Pawns
+function isDestinationValid(piece, to) {
+    if(positions.get(to.key) == null) {
+        return true;
+    }
+    if(positions.get(to.key).isWhite !== piece.isWhite) {
+        return true;
+    }
+    return false;
 }
 
 class Rook extends Piece {
