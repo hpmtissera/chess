@@ -159,7 +159,7 @@ function isPathClear(from, to, isPawn) {
         
     }
 
-    // check path clean in the diagonal
+    // check path clear in the diagonal
     if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) ===  Math.abs(from.number - to.number)) {
         const numberOfSquaresToCheck = Math.abs(to.number - from.number) - 1;
         console.log(numberOfSquaresToCheck);
@@ -188,6 +188,37 @@ function isPathClear(from, to, isPawn) {
         }
     }
 
+    // check path claer in the row or column
+    if(Math.abs(from.letter === to.letter)) {
+        const numberOfSquaresToCheck = Math.abs(to.number - from.number) - 1;
+        for (let i = 1; i <= numberOfSquaresToCheck; i++) {
+            if(from.number < to.number) {
+                if(positions.get(`${from.letter}${from.number + i}`) != null) {
+                    return false;
+                }
+            } else {
+                if(positions.get(`${from.letter}${from.number - i}`) != null) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    if(Math.abs(from.number === to.number)) {
+        const numberOfSquaresToCheck = Math.abs(to.letter.charCodeAt(0) - from.letter.charCodeAt(0)) - 1;
+        for (let i = 1; i <= numberOfSquaresToCheck; i++) {
+            if(from.letter.charCodeAt(0) < to.letter.charCodeAt(0)) {
+                if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) + i)}${from.number}`) != null) {
+                    return false;
+                }
+            } else {
+                if(positions.get(`${String.fromCharCode(from.letter.charCodeAt(0) - i)}${from.number}`) != null) {
+                    return false;
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -207,9 +238,6 @@ class Bishop extends Piece {
                 }
             }
         }
-
-
-        
         return false;
     }
 }
@@ -255,6 +283,20 @@ function isDestinationValid(piece, to) {
 class Rook extends Piece {
     constructor(isWhite) {
         super(isWhite, 'R');
+    }
+
+    isValidMove(from, to) {
+        //check if destination is in the row or column
+        if(Math.abs(from.letter === to.letter || from.number === to.number)) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 
