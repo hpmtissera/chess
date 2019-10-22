@@ -287,7 +287,7 @@ class Rook extends Piece {
 
     isValidMove(from, to) {
         //check if destination is in the row or column
-        if(Math.abs(from.letter === to.letter || from.number === to.number)) {
+        if(from.letter === to.letter || from.number === to.number) {
             // check if destination is valid
             if(isDestinationValid(this, to)) {
                 // check if path is clear
@@ -304,11 +304,66 @@ class Queen extends Piece {
     constructor(isWhite) {
         super(isWhite, 'Q');
     }
+
+    isValidMove(from, to) {
+        //check if destination is in the row or column
+        if(from.letter === to.letter || from.number === to.number) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+
+        //check if destination is in the diagonal
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) ===  Math.abs(from.number - to.number)) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
 
 class King extends Piece {
     constructor(isWhite) {
         super(isWhite, 'K');
+    }
+
+    isValidMove(from, to) {
+
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) > 1 || Math.abs(from.number - to.number) > 1) {
+            return false;
+        }
+
+        //check if destination is in the row or column
+        if(from.letter === to.letter || from.number === to.number) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+
+        //check if destination is in the diagonal
+        if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) ===  Math.abs(from.number - to.number)) {
+            // check if destination is valid
+            if(isDestinationValid(this, to)) {
+                // check if path is clear
+                if(isPathClear(from, to, false)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 
