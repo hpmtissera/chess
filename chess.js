@@ -15,6 +15,7 @@ unicodes.set('WN',  "\u{2658}");
 unicodes.set('WP',  "\u{2659}"); 
 
 const positions = new Map();
+let moves = [];
 
 class PiecePosition {
     constructor(piece, position) {
@@ -42,6 +43,13 @@ class Piece {
     }
 }
 
+class Move {
+    constructor(from, to) {
+        this.from = from;
+        this.to = to;
+    }
+}
+
 class Pawn extends Piece {
     constructor(isWhite) {
         super(isWhite, 'P');
@@ -51,24 +59,35 @@ class Pawn extends Piece {
         console.log(this, 'from', from, 'to', to);
 
         if(this.isWhite) {
-
             if(from.letter === to.letter) {
                 // if pawn in initial position can move two squares
                 if(from.number === 2 && to.number === 4) {
-                    return true;
+                    if(isPathClear(from, to, true)) {
+                        return true;
+                    }
                 }
 
                 // if any other position can move one square forward
                 if(to.number - from.number === 1) {
-                    return true;
+                    if(isPathClear(from, to, true)) {
+                        return true;
+                    }
                 }
             }
 
             // when captureing can move one squre diagonal
             if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && to.number - from.number === 1) {
-                console.log(positions, to.label, positions.get(to.label))
                 if(positions.get(to.key) && !positions.get(to.key).isWhite) {
                     return true;
+                }
+
+                //en passant
+                let lastMove = moves[moves.length - 1];
+                if(lastMove.to.piece instanceof Pawn && lastMove.to.position.number === from.number) {
+                    if(lastMove.from.position.number - lastMove.to.position.number === 2) {
+                        drawBox(document.getElementById("chessBoard").getContext("2d"), lastMove.to.position, null);
+                        return true;
+                    }
                 }
             }
 
@@ -76,12 +95,16 @@ class Pawn extends Piece {
             if(from.letter === to.letter) {
                 // if pawn in initial position can move two squares
                 if(from.number === 7 && to.number === 5) {
-                    return true;
+                    if(isPathClear(from, to, true)) {
+                        return true;
+                    }
                 }
 
                 // if any other position can move one square forward
                 if(from.number - to.number === 1) {
-                    return true;
+                    if(isPathClear(from, to, true)) {
+                        return true;
+                    }
                 }
             }
 
@@ -89,6 +112,15 @@ class Pawn extends Piece {
             if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && from.number - to.number === 1) {
                 if(positions.get(to.key) && positions.get(to.key).isWhite) {
                     return true;
+                }
+
+                //en passant
+                let lastMove = moves[moves.length-1];
+                if(lastMove.to.piece instanceof Pawn && lastMove.to.position.number === from.number) {
+                    if(lastMove.to.position.number - lastMove.from.position.number === 2) {
+                        drawBox(document.getElementById("chessBoard").getContext("2d"), lastMove.to.position, null);
+                        return true;
+                    }
                 }
             }
         }
@@ -102,8 +134,31 @@ function inCheckAfterMove(from, to) {
     return false;
 }
  
-function isPathClear(from, to) {
-    
+function isPathClear(from, to, isPawn) {
+    // if from and to in same column (same letter)
+    if(from.letter === to.letter) {
+        const numberOfSquaresToCheck = Math.abs(to.number - from.number) - 1;
+
+        for (let i = 1; i <= numberOfSquaresToCheck; i++) {
+            if(from.number < to.number) {
+                if(positions.get(`${from.letter}${from.number + i}`) != null) {
+                    return false;
+                }
+            } else {
+                if(positions.get(`${from.letter}${from.number - i}`) != null) {
+                    return false;
+                } 
+            }
+        }
+
+        if(isPawn) {
+            if(positions.get(`${to.letter}${to.number}`) != null) {
+                return false;
+            }
+        }
+        
+    }
+    return true;
 }
 
 class Bishop extends Piece {
@@ -202,7 +257,7 @@ function drawBoard() {
                 number = 8;
                 break;
         }
-        console.log(from);
+        console.log("from", from);
         if(from === null && positions.get(letter + number)) {
             let position = new Position(letter, number);
             from = new PiecePosition(positions.get(letter + number), position);
@@ -210,6 +265,7 @@ function drawBoard() {
             if(from && from.piece.isValidMove(from.position, new Position(letter, number))) {
                 drawBox(ctx, from.position, null);
                 drawBox(ctx, new Position(letter, number), from.piece);
+                moves.push(new Move(from, new PiecePosition(from.piece, new Position(letter, number))));
             }
             // when click on same piece two times, it remains as from value
             if(from && from.position.key !== new Position(letter, number).key) {
