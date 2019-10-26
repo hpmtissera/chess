@@ -30,6 +30,12 @@ class Position {
         this.letter = letter;
         this.number = number;
     }
+
+    static PositionInstance(positionLabel) {
+        const letter = positionLabel.substring(0, 1);
+        const number = positionLabel.substring(1);
+        return new Position(letter, number);        
+    }
 }
 
 class Piece {
@@ -75,20 +81,8 @@ class Pawn extends Piece {
                 }
             }
 
-            // when captureing can move one squre diagonal
-            if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && to.number - from.number === 1) {
-                if(positions.get(to.key) && !positions.get(to.key).isWhite) {
-                    return true;
-                }
-
-                //en passant
-                let lastMove = moves[moves.length - 1];
-                if(lastMove.to.piece instanceof Pawn && lastMove.to.position.number === from.number) {
-                    if(lastMove.from.position.number - lastMove.to.position.number === 2) {
-                        drawBox(document.getElementById("chessBoard").getContext("2d"), lastMove.to.position, null);
-                        return true;
-                    }
-                }
+            if(this.isCapturingMove(from, to)) {
+                return true;
             }
 
         } else {
@@ -108,9 +102,36 @@ class Pawn extends Piece {
                 }
             }
 
+            if(this.isCapturingMove(from, to)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    isCapturingMove(from, to, isAttackedTest) {
+        if(this.isWhite) {
+             // when captureing can move one squre diagonal
+            if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && to.number - from.number === 1) {
+                if(positions.get(to.key) && !positions.get(to.key).isWhite) {
+                    return true;
+                }
+
+                //en passant
+                let lastMove = moves[moves.length - 1];
+                if(lastMove.to.piece instanceof Pawn && lastMove.to.position.number === from.number) {
+                    if(lastMove.from.position.number - lastMove.to.position.number === 2) {
+                        drawBox(document.getElementById("chessBoard").getContext("2d"), lastMove.to.position, null);
+                        return true;
+                    }
+                }
+            }
+        } else {
+            console.log("capturing move", from, to);
             // when captureing can move one squre diagonal
             if(Math.abs(from.letter.charCodeAt(0) - to.letter.charCodeAt(0)) === 1 && from.number - to.number === 1) {
-                if(positions.get(to.key) && positions.get(to.key).isWhite) {
+                if((positions.get(to.key) && positions.get(to.key).isWhite) || isAttackedTest) {
                     return true;
                 }
 
@@ -127,11 +148,6 @@ class Pawn extends Piece {
 
         return false;
     }
-
-}
-
-function inCheckAfterMove(from, to) {
-    return false;
 }
  
 function isPathClear(from, to, isPawn) {
@@ -348,7 +364,9 @@ class King extends Piece {
             if(isDestinationValid(this, to)) {
                 // check if path is clear
                 if(isPathClear(from, to, false)) {
-                    return true;
+                    if(!isAttacked(to, this.isWhite)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -359,12 +377,143 @@ class King extends Piece {
             if(isDestinationValid(this, to)) {
                 // check if path is clear
                 if(isPathClear(from, to, false)) {
-                    return true;
+                    if(!isAttacked(to, this.isWhite)) {
+                        return true;
+                    }
                 }
             }
         }
+        
         return false;
     }
+}
+
+function isAttacked(position, isWhite) {
+    console.log("check is attacked", position, isWhite);
+    for (const [positionLabel, piece] of positions.entries()) {
+        if(!(piece instanceof Pawn) && piece.isWhite !== isWhite) {
+            if(piece.isValidMove(Position.PositionInstance(positionLabel), position)) {
+                console.log("\n\n is attacked !!!!!!!!")
+                return true;
+            }
+        }
+
+        if(piece instanceof Pawn && piece.isWhite !== isWhite) {
+            console.log("check for attachk by pawn");
+            if(piece.isCapturingMove(Position.PositionInstance(positionLabel), position, true)) {
+                console.log("\n\n is attacked !!!!!!!!")
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function isStaleMate(moveByWhite) {
+    let kingPosition
+    if(moveByWhite) {
+        for (const [positionLabel, piece] of positions.entries()) {
+            if(piece instanceof King && !piece.isWhite) {
+                kingPosition = Position.PositionInstance(positionLabel);
+                break;
+            }
+        }
+    } else {
+        for (const [positionLabel, piece] of positions.entries()) {
+            if(piece instanceof King && piece.isWhite) {
+                kingPosition = Position.PositionInstance(positionLabel);
+                break;
+            }
+        }
+    }
+
+    console.log("is stale mate", kingPosition, moveByWhite)
+
+    // check move forward
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(kingPosition.letter, kingPosition.number + 1))) {
+        console.log("1");
+        return false;
+    }
+
+    // check move backwards
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(kingPosition.letter, kingPosition.number - 1))) {
+        console.log("2");
+        return false;
+    }
+
+    // check move left
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) - 1), kingPosition.number))) {
+        console.log("3");
+        return false;
+    }
+
+    // check move right
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) + 1), kingPosition.number))) {
+        console.log("4");
+        return false;
+    }
+
+    // check move up right
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) + 1), kingPosition.number + 1))) {
+        console.log("5");
+        return false;
+    }
+
+    // check move up left
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) - 1), kingPosition.number + 1))) {
+        console.log("6");
+        return false;
+    }
+
+    // check move down right
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) + 1), kingPosition.number - 1))) {
+        console.log("7");
+        return false;
+    }
+
+    // check move down left
+    if(new King(!moveByWhite).isValidMove(kingPosition, new Position(String.fromCharCode(kingPosition.letter.charCodeAt(0) - 1), kingPosition.number - 1))) {
+        console.log("8");
+        return false;
+    }
+
+    console.log("end");
+
+    return true;
+}
+
+function isCheckMate(moveByWhite) {
+    console.log("check checkmate");
+    let kingPosition
+    if(moveByWhite) {
+        for (const [positionLabel, piece] of positions.entries()) {
+            if(piece instanceof King && !piece.isWhite) {
+                console.log(positionLabel);
+                kingPosition = Position.PositionInstance(positionLabel);
+                break;
+            }
+        }
+    } else {
+        for (const [positionLabel, piece] of positions.entries()) {
+            if(piece instanceof King && piece.isWhite) {
+                console.log(positionLabel);
+                kingPosition = Position.PositionInstance(positionLabel);
+                break;
+            }
+        }
+    }
+
+    if(moveByWhite) {
+        console.log("move by white", kingPosition);
+        if(isAttacked(kingPosition, false) && isStaleMate(moveByWhite)) {
+            return true;
+        }
+    } else {
+        if(isAttacked(kingPosition, true) && isStaleMate(moveByWhite)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function drawBoard() {
@@ -442,6 +591,18 @@ function drawBoard() {
                 drawBox(ctx, from.position, null);
                 drawBox(ctx, new Position(letter, number), from.piece);
                 moves.push(new Move(from, new PiecePosition(from.piece, new Position(letter, number))));
+
+                // if(isStaleMate(from.piece.isWhite)) {
+                //     alert("Draw by Stalemate");
+                // }
+
+                if(isCheckMate(from.piece.isWhite)) {
+                   if(from.piece.isWhite) {
+                       alert("White won by Checkmate");
+                   } else {
+                       alert("Black won by Checkmate");
+                   }
+                }
             }
             // when click on same piece two times, it remains as from value
             if(from && from.position.key !== new Position(letter, number).key) {
